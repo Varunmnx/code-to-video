@@ -37,7 +37,7 @@ export const calculateMetadata: CalculateMetadataFunction<
   );
   const codeWidth = widthPerCharacter * maxCharacters;
 
-  const defaultStepDuration = 90;
+  const defaultStepDuration = 60 * 26;
 
   const themeColors = await getThemeColors(props.theme);
 
@@ -51,6 +51,7 @@ export const calculateMetadata: CalculateMetadataFunction<
 
   const minimumWidth = props.width.type === "fixed" ? 0 : 1080;
   const minimumWidthApplied = Math.max(minimumWidth, divisibleByTwo);
+
 
   return {
     durationInFrames: contents.length * defaultStepDuration,

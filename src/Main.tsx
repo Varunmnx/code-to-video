@@ -1,11 +1,12 @@
-import { AbsoluteFill, Series, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Series, useVideoConfig } from "remotion";
 import { ProgressBar } from "./ProgressBar";
 import { CodeTransition } from "./CodeTransition";
 import { HighlightedCode } from "codehike/code";
 import { ThemeColors, ThemeProvider } from "./calculate-metadata/theme";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RefreshOnCodeChange } from "./ReloadOnCodeChange";
 import { verticalPadding } from "./font";
+import { getAudioWithStory, Script } from "./calculate-metadata/get-files";
 
 export type Props = {
   steps: HighlightedCode[] | null;
@@ -14,11 +15,17 @@ export type Props = {
 };
 
 export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
+  const [audios,setAudios] = useState<{
+    audioSrc: string;
+    videoDuration: number;
+}[]>([])
   if (!steps) {
     throw new Error("Steps are not defined");
   }
 
-  const { durationInFrames } = useVideoConfig();
+  const data = useVideoConfig();
+  const  { durationInFrames } = data
+  console.log(data)
   const stepDuration = durationInFrames / steps.length;
   const transitionDuration = 30;
 
@@ -37,7 +44,16 @@ export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
       padding: `${verticalPadding}px 0px`,
     };
   }, []);
+ console.log("steps",steps)
 
+  useEffect(()=>{
+    (async ()=>{
+      const audioWithStory = await getAudioWithStory()
+      setAudios(audioWithStory)
+    })()
+  },[])
+
+  console.log("audios",audios)
   return (
     <ThemeProvider themeColors={themeColors}>
       <AbsoluteFill style={outerStyle}>
@@ -54,7 +70,7 @@ export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
                 <Series.Sequence
                   key={index}
                   layout="none"
-                  durationInFrames={stepDuration}
+                  durationInFrames={ audios[index]?.videoDuration ? (audios[index]?.videoDuration * 30) : stepDuration}
                   name={step.meta}
                 >
                   <CodeTransition
@@ -62,6 +78,7 @@ export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
                     newCode={step}
                     durationInFrames={transitionDuration}
                   />
+                  { audios[index]?.audioSrc && <Audio src={audios[index]?.audioSrc} />}
                 </Series.Sequence>
               ))}
             </Series>

@@ -19,7 +19,7 @@ export const RemotionRoot = () => {
         },
       }}
       fps={30}
-      height={1080}
+      height={2000}
       calculateMetadata={calculateMetadata}
       schema={schema}
     />
