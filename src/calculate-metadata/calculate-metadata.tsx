@@ -37,7 +37,7 @@ export const calculateMetadata: CalculateMetadataFunction<
   );
   const codeWidth = widthPerCharacter * maxCharacters;
 
-  const defaultStepDuration = 60 * 26;
+  const defaultStepDuration = 60
 
   const themeColors = await getThemeColors(props.theme);
 

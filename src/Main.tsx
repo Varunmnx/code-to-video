@@ -6,7 +6,7 @@ import { ThemeColors, ThemeProvider } from "./calculate-metadata/theme";
 import { useEffect, useMemo, useState } from "react";
 import { RefreshOnCodeChange } from "./ReloadOnCodeChange";
 import { verticalPadding } from "./font";
-import { getAudioWithStory, Script } from "./calculate-metadata/get-files";
+import { getAudioWithStory } from "./calculate-metadata/get-files";
 
 export type Props = {
   steps: HighlightedCode[] | null;
@@ -15,17 +15,19 @@ export type Props = {
 };
 
 export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
-  const [audios,setAudios] = useState<{
+  const [audios, setAudios] = useState<{
     audioSrc: string;
     videoDuration: number;
-}[]>([])
+  }[]>([]);
+
   if (!steps) {
     throw new Error("Steps are not defined");
   }
 
   const data = useVideoConfig();
-  const  { durationInFrames } = data
-  console.log(data)
+  const { durationInFrames } = data;
+  console.log(data);
+
   const stepDuration = durationInFrames / steps.length;
   const transitionDuration = 30;
 
@@ -44,16 +46,21 @@ export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
       padding: `${verticalPadding}px 0px`,
     };
   }, []);
- console.log("steps",steps)
 
-  useEffect(()=>{
-    (async ()=>{
-      const audioWithStory = await getAudioWithStory()
-      setAudios(audioWithStory)
-    })()
-  },[])
+  console.log("steps", steps);
+  console.log("steps.length", steps.length);
+  console.log("stepDuration", stepDuration);
+  console.log("durationInFrames", durationInFrames);
 
-  console.log("audios",audios)
+  useEffect(() => {
+    (async () => {
+      const audioWithStory = await getAudioWithStory();
+      setAudios(audioWithStory);
+    })();
+  }, []);
+
+  console.log("audios", audios);
+
   return (
     <ThemeProvider themeColors={themeColors}>
       <AbsoluteFill style={outerStyle}>
@@ -66,21 +73,35 @@ export const Main: React.FC<Props> = ({ steps, themeColors, codeWidth }) => {
           <ProgressBar steps={steps} />
           <AbsoluteFill style={style}>
             <Series>
-              {steps.map((step, index) => (
-                <Series.Sequence
-                  key={index}
-                  layout="none"
-                  durationInFrames={ audios[index]?.videoDuration ? (audios[index]?.videoDuration * 30) : stepDuration}
-                  name={step.meta}
-                >
-                  <CodeTransition
-                    oldCode={steps[index - 1]}
-                    newCode={step}
-                    durationInFrames={transitionDuration}
-                  />
-                  { audios[index]?.audioSrc && <Audio src={audios[index]?.audioSrc} />}
-                </Series.Sequence>
-              ))}
+              {steps.map((step, index) => {
+                // Use fixed duration for debugging
+                const sequenceDuration = stepDuration; // Remove audio-based duration for now
+
+                console.log(`Sequence ${index}:`, {
+                  sequenceDuration,
+                  stepDuration,
+                  stepMeta: step.meta || 'Unknown'
+                });
+
+                return (
+                  <Series.Sequence
+                    key={index}
+                    layout="none"
+                    durationInFrames={Math.floor(sequenceDuration)}
+                    name={`Step ${index}: ${step.meta || 'Unknown'}`}
+                  >
+                    <CodeTransition
+                      oldCode={steps[index - 1]} // Will be undefined for first step
+                      newCode={step}
+                      durationInFrames={transitionDuration}
+                    />
+                    
+                    {audios[index]?.audioSrc && (
+                      <Audio src={audios[index].audioSrc} />
+                    )}
+                  </Series.Sequence>
+                );
+              })}
             </Series>
           </AbsoluteFill>
         </AbsoluteFill>

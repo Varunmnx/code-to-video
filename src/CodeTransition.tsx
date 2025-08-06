@@ -19,10 +19,12 @@ export function CodeTransition({
   oldCode,
   newCode,
   durationInFrames = 30,
+  transitionDelayInFrames = 0,
 }: {
   readonly oldCode: HighlightedCode | null;
   readonly newCode: HighlightedCode;
   readonly durationInFrames?: number;
+  readonly transitionDelayInFrames?: number;
 }) {
   const frame = useCurrentFrame();
 
@@ -35,9 +37,13 @@ export function CodeTransition({
     return oldCode || { ...newCode, tokens: [], annotations: [] };
   }, [newCode, oldCode]);
 
+  // Only show new code after the transition delay has passed
+  const shouldShowNewCode = frame >= transitionDelayInFrames;
+
   const code = useMemo(() => {
-    return oldSnapshot ? newCode : prevCode;
-  }, [newCode, prevCode, oldSnapshot]);
+    if (!oldSnapshot) return prevCode;
+    return shouldShowNewCode ? newCode : prevCode;
+  }, [newCode, prevCode, oldSnapshot, shouldShowNewCode]);
 
   useEffect(() => {
     if (!oldSnapshot) {
@@ -51,9 +57,15 @@ export function CodeTransition({
       setOldSnapshot(getStartingSnapshot(ref.current!));
       return;
     }
+
+    // Don't start transitions until after the delay
+    if (frame < transitionDelayInFrames) {
+      return;
+    }
+
     const transitions = calculateTransitions(ref.current!, oldSnapshot);
     transitions.forEach(({ element, keyframes, options }) => {
-      const delay = durationInFrames * options.delay;
+      const delay = transitionDelayInFrames + durationInFrames * options.delay;
       const duration = durationInFrames * options.duration;
       const linearProgress = interpolate(
         frame,
